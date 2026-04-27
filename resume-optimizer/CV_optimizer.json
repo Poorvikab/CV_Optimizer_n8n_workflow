@@ -1,0 +1,441 @@
+{
+  "name": "CV_optimizer",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "optimize-cv",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8381e75f-3454-403f-a8c1-2fad052ec0d1",
+      "name": "Webhook",
+      "webhookId": "c7fea786-6c36-4316-882f-f0a5489321af"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer <YOUR_GROQ_API_KEY>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.1-8b-instant\",\n  \"max_tokens\": 800,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Extract Job Title, Skills, Requirements and Responsibilities. Keep the answer concise.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{$json.description.slice(0,2500).toJsonString()}}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1488,
+        0
+      ],
+      "id": "e40a5689-c4d2-440e-8ee4-2ca887f9ed23",
+      "name": "Job Description Agent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer <YOUR_GROQ_API_KEY>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.1-8b-instant\",\n  \"max_tokens\": 1500,\n  \"temperature\": 0.3,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Rewrite this resume to match the job description. ATS optimized Professional Strong bullet points. Clear structure. Do NOT invent experience. Return a full resume. Do not add any notes, disclaimers, or meta-commentary at the end. Return only the resume itself.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{$('Resume Parser').item.json.choices[0].message.content.toJsonString()}}\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{$json.choices[0].message.content.toJsonString()}}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2160,
+        0
+      ],
+      "id": "5c248036-28e0-4e6a-906f-1fdb82a4b0f1",
+      "name": "CV Optimizer Agent"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        192,
+        0
+      ],
+      "id": "c76c3226-94d8-4eb8-a554-8638fe08e147",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer <YOUR_GROQ_API_KEY>"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.1-8b-instant\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Extract structured resume information including skills, projects, education and experience.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{$json.text.toJsonString()}}\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        400,
+        0
+      ],
+      "id": "7792ca2d-f7e8-42b1-a833-d20b6b92ab72",
+      "name": "Resume Parser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/bebity~linkedin-jobs-scraper/runs?token=<YOUR_APIFY_TOKEN>",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "YOUR_APIFY_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n \"keywords\": \"{{ $('Webhook').item.json.body.role }}\",\n \"location\": \"{{ $('Webhook').item.json.body.location }}\",\n \"preference\": \"{{ $('Webhook').item.json.body.work_preference }}\",\n \"maxItems\": 10\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        640,
+        0
+      ],
+      "id": "aa341b71-58a3-44c8-9485-ede7e044fdfc",
+      "name": "Apify LinkedIn Jobs"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.apify.com/v2/datasets/{{ $json.data.defaultDatasetId }}/items",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "token",
+              "value": "YOUR_APIFY_TOKEN"
+            },
+            {
+              "name": "limit",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1056,
+        0
+      ],
+      "id": "848ad721-6f13-4a37-bb25-b69c3be4042a",
+      "name": "Get Jobs Data",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "maxItems": "=1"
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1712,
+        0
+      ],
+      "id": "084b1d0e-4890-46c3-bdc8-f965c9aaeece",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "jsCode": "const content = $input.first().json.choices[0].message.content;\n\nconst body = content\n  .replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>')\n  .replace(/\\* \\*\\*(.*?)\\*\\*/g, '• <strong>$1</strong>')\n  .replace(/^\\* /gm, '• ')\n  .replace(/^- /gm, '• ')\n  .split('\\n')\n  .join('<br>');\n\nconst html = '<html><body style=\"font-family:Arial,sans-serif;padding:40px;max-width:800px;margin:auto;\">' + body + '</body></html>';\n\nreturn [{ json: { html: html } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        0
+      ],
+      "id": "c39cfba3-d5d4-4408-b193-b04b3591f33a",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "html_content": "={{ $json.html }}",
+        "output_format": "file",
+        "output_filename": "Optimized_CV"
+      },
+      "type": "n8n-nodes-htmlcsstopdf.htmlcsstopdf",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        0
+      ],
+      "id": "c6348deb-040b-4638-9804-fc49e104fac8",
+      "name": "Convert HTML to PDF"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "24af541f-d557-402c-8113-3bda2c7d4625",
+      "name": "Wait",
+      "webhookId": "d001f3fe-eda7-490a-8d0f-abf823dcdb10"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "responseDataSource": "set",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2784,
+        0
+      ],
+      "id": "49ac3b57-2747-4313-b613-bc9e9ec0446d",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        848,
+        0
+      ],
+      "id": "5f1386db-bacc-4b93-a401-f64a347441b2",
+      "name": "Wait1",
+      "webhookId": "066d24f0-9550-410a-8f9f-c587604be880"
+    },
+    {
+      "parameters": {
+        "amount": 20
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1952,
+        0
+      ],
+      "id": "f41b710d-b7d0-4d91-987d-1582c45bdaa3",
+      "name": "Wait2",
+      "webhookId": "d35f6374-f413-4606-aea4-c2169baca978"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Job Description Agent": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Resume Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resume Parser": {
+      "main": [
+        [
+          {
+            "node": "Apify LinkedIn Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CV Optimizer Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify LinkedIn Jobs": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Jobs Data": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Convert HTML to PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert HTML to PDF": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Job Description Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Get Jobs Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "CV Optimizer Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "3b0d3b23-7b5e-4bbc-9b43-d9f932cf8d90",
+  "meta": {
+    "instanceId": "997ce5218ac425f9e0b889820d3d02cc47bad0ea49ab45b58537999b3e49c6e9"
+  },
+  "id": "vYNATMEhahrLnGPt",
+  "tags": []
+}
