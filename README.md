@@ -7,6 +7,8 @@ An automated pipeline that takes your resume (PDF) + a job role + location, sear
 ## Demo Video
 https://github.com/user-attachments/assets/a06c37d9-b52a-4a74-a9da-50b9c291e59e
 
+---
+
 ## 🧠 How It Works
 
 ```
@@ -47,17 +49,20 @@ Return PDF to user
 
 Groq provides a free, fast API for running LLaMA models.
 
-1. Go to [https://console.groq.com](https://console.groq.com) and sign up
-2. Navigate to **API Keys** in the sidebar
-3. Click **Create API Key** and copy it
-4. In the n8n workflow, replace the `Authorization` header value in these nodes:
+1. Go to [https://console.groq.com/keys](https://console.groq.com/keys) and sign up / log in
+2. Click **Create API Key**, give it a name, and copy it
+3. In the n8n workflow, find these three nodes and replace the `Authorization` header value in each:
    - `Resume Parser`
    - `Job Description Agent`
    - `CV Optimizer Agent`
 
-   Replace with:
+   The header looks like this — replace the placeholder after `Bearer`:
    ```
-   Bearer YOUR_GROQ_API_KEY_HERE
+   Bearer <YOUR_GROQ_API_KEY>
+   ```
+   → becomes →
+   ```
+   Bearer gsk_xxxxxxxxxxxxxxxxxxxx
    ```
 
 > The workflow uses `llama-3.1-8b-instant` — fast and free tier friendly.
@@ -69,18 +74,32 @@ Groq provides a free, fast API for running LLaMA models.
 Apify is used to scrape real LinkedIn job listings based on your desired role and location.
 
 1. Go to [https://apify.com](https://apify.com) and sign up (free tier available)
-2. Navigate to **Settings → Integrations → API tokens**
-3. Copy your **Personal API Token**
-4. In the n8n workflow, find the **Apify LinkedIn Jobs** node and update the URL:
+2. In the Apify Store, search for **LinkedIn Jobs Scraper** by bebity, or go directly to:
+   👉 [apify.com/bebity/linkedin-jobs-scraper](https://apify.com/bebity/linkedin-jobs-scraper)
+3. Click **Try for free** to add it to your account
+4. Navigate to **Settings → Integrations → API tokens**
+5. Copy your **Personal API Token**
+6. In the n8n workflow, update **two places** with your token:
+
+   **a) The `Apify LinkedIn Jobs` node — update the URL:**
    ```
-   https://api.apify.com/v2/acts/bebity~linkedin-jobs-scraper/runs?token=YOUR_APIFY_TOKEN
+   https://api.apify.com/v2/acts/bebity~linkedin-jobs-scraper/runs?token=<YOUR_APIFY_TOKEN>
    ```
-5. Also update the **Get Jobs Data** node — replace the token in the query parameters:
+   → becomes →
+   ```
+   https://api.apify.com/v2/acts/bebity~linkedin-jobs-scraper/runs?token=apify_api_xxxxxxxxxxxx
+   ```
+
+   **b) The `Get Jobs Data` node — update the `token` query parameter:**
    ```
    token: YOUR_APIFY_TOKEN
    ```
+   → becomes →
+   ```
+   token: apify_api_xxxxxxxxxxxx
+   ```
 
-> The scraper uses the `bebity~linkedin-jobs-scraper` actor. Make sure it's available in your Apify account (it's a public actor — no extra setup needed).
+> The scraper uses the `bebity~linkedin-jobs-scraper` actor. Since you added it via "Try for free", it's ready to use — no extra setup needed.
 
 ---
 
@@ -88,7 +107,7 @@ Apify is used to scrape real LinkedIn job listings based on your desired role an
 
 This converts the AI-generated HTML resume into a downloadable PDF.
 
-#### Option A — Cloud / n8n.cloud (Recommended)
+#### Option A — n8n Cloud (Recommended)
 
 1. Go to **Settings → Community Nodes** in your n8n instance
 2. Click **Install a community node**
@@ -98,10 +117,7 @@ This converts the AI-generated HTML resume into a downloadable PDF.
 #### Option B — Self-hosted / Local
 
 ```bash
-# Navigate to your n8n installation directory
 cd ~/.n8n/nodes
-
-# Install the package
 npm install n8n-nodes-htmlcsstopdf
 ```
 
@@ -110,11 +126,10 @@ Then restart your n8n instance.
 #### Get your PDFMunk API Key
 
 1. Go to [https://pdfmunk.com](https://pdfmunk.com) and sign up
-2. Navigate to your **Dashboard → API Key**
-3. Copy the API key
-4. In n8n, go to **Credentials → New Credential**
-5. Search for `HTML CSS to PDF` and enter your PDFMunk API key
-6. Link this credential to the **Convert HTML to PDF** node in the workflow
+2. Navigate to your **Dashboard → API Key** and copy it
+3. In n8n, go to **Credentials → New Credential**
+4. Search for `HTML CSS to PDF` and enter your PDFMunk API key
+5. Link this credential to the **Convert HTML to PDF** node in the workflow
 
 ---
 
@@ -123,7 +138,7 @@ Then restart your n8n instance.
 1. Open your n8n instance (e.g., `http://localhost:5678`)
 2. Go to **Workflows** in the sidebar
 3. Click **Import from file**
-4. Upload `My_workflow.json`
+4. Upload `CV_optimizer.json`
 5. Update all API keys as described above
 6. Click **Save** and then **Activate**
 
@@ -238,7 +253,7 @@ a.click();
 ## 📬 Support
 
 If you run into issues:
-- Check n8n execution logs under **Executions** tab
+- Check n8n execution logs under the **Executions** tab
 - Verify all API keys are active and have sufficient quota
 - Apify free tier has limited runs — monitor usage at [apify.com/billing](https://apify.com/billing)
 - Groq free tier has rate limits — check [console.groq.com](https://console.groq.com)
