@@ -5,7 +5,7 @@ An automated pipeline that takes your resume (PDF) + a job role + location, sear
 ---
 
 ## Demo Video
-https://github.com/user-attachments/assets/a06c37d9-b52a-4a74-a9da-50b9c291e59e
+https://github.com/user-attachments/assets/c0538169-e0de-4316-a81d-7bcafd4c97fa
 
 ---
 
